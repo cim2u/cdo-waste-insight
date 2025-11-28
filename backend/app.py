@@ -1,108 +1,250 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import pandas as pd
+import joblib
+import os
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-import os
+import numpy as np
 
-# ----------------------
-# Initialize Flask
-# ----------------------
+MODEL_PATH = "waste_model.pkl"
+DEFAULT_DATASET_PATH = "dataset.xlsx"
+
 app = Flask(__name__)
 CORS(app)
 
-# ----------------------
-# Load dataset
-# ----------------------
-dataset_path = "dataset.xlsx"
-if not os.path.exists(dataset_path):
-    raise FileNotFoundError(f"{dataset_path} not found! Place it in the same folder as app.py.")
+model = None
 
-df = pd.read_excel(dataset_path)
+# ---------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------
+def find_column(df, candidates):
+    cols = list(df.columns)
 
-# Rename column for simplicity
-df = df.rename(columns={
-    "SW generation (Population x SW segregation) kg/day": "TotalWaste"
-})
+    # Exact match
+    for cand in candidates:
+        for col in cols:
+            if str(col).strip().lower() == cand.strip().lower():
+                return col
 
-# ----------------------
-# Create waste level categories
-# ----------------------
-def classify_waste_level(value):
-    if value < 1000:
+    # Partial match
+    for cand in candidates:
+        for col in cols:
+            if cand.strip().lower() in str(col).strip().lower():
+                return col
+
+    return None
+
+
+def get_barangay_column(df):
+    candidates = ["barangay", "barangay name", "brgy", "barangay_name"]
+    col = find_column(df, candidates)
+    if col:
+        return col
+
+    # fallback: first string column
+    for c in df.columns:
+        if df[c].dtype == object:
+            return c
+
+    raise Exception("Barangay column not found in dataset.")
+
+
+def get_total_waste_column(df):
+    candidates = [
+        "SW generation (Population x SW segregation) kg/day",
+        "total waste volume per day (kg/day)",
+        "total waste",
+        "waste",
+        "totalwaste"
+    ]
+    col = find_column(df, candidates)
+    if col:
+        return col
+
+    # fallback: largest numeric column
+    numeric_cols = [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])]
+    if not numeric_cols:
+        raise Exception("No numeric waste column found.")
+
+    means = {c: df[c].mean() for c in numeric_cols}
+    return max(means, key=means.get)
+
+
+def categorize(x):
+    try:
+        x = float(x)
+    except:
+        return "Unknown"
+
+    if x < 3000:
         return "Low"
-    elif value <= 2000:
+    elif x < 8000:
         return "Medium"
     else:
         return "High"
 
-df['WasteLevel'] = df['TotalWaste'].apply(classify_waste_level)
 
-# ----------------------
-# Features and target
-# ----------------------
-X = df[['TotalWaste']]  # You can add more features later
-y = df['WasteLevel']
+# ---------------------------------------------------------
+# Model Training
+# ---------------------------------------------------------
+def train_model():
+    global model
 
-# Train Decision Tree
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-model = DecisionTreeClassifier()
-model.fit(X_train, y_train)
-
-# Model accuracy
-y_pred = model.predict(X_test)
-accuracy = round(accuracy_score(y_test, y_pred) * 100, 2)
-
-# ----------------------
-# Routes
-# ----------------------
-
-# Home route
-@app.route("/", methods=["GET"])
-def home():
-    return "Waste Prediction API is running!"
-
-# Get all barangays/data
-@app.route("/barangays", methods=["GET"])
-def barangays():
-    return jsonify(df.to_dict(orient="records"))
-
-# Predict waste level
-@app.route("/predict", methods=["POST"])
-def predict():
     try:
-        # Force parse JSON
-        data = request.get_json(force=True)
+        df = pd.read_excel(DEFAULT_DATASET_PATH)
 
-        if "TotalWaste" not in data:
-            return jsonify({"error": "Missing 'TotalWaste' in JSON"}), 400
+        barangay_col = get_barangay_column(df)
+        waste_col = get_total_waste_column(df)
 
-        try:
-            total_waste = float(data["TotalWaste"])
-        except ValueError:
-            return jsonify({"error": "'TotalWaste' must be a number"}), 400
+        df = df[[barangay_col, waste_col]].copy()
+        df.rename(columns={barangay_col: "Barangay", waste_col: "TotalWaste"}, inplace=True)
 
-        X_input = [[total_waste]]
-        pred = model.predict(X_input)[0]
+        df["TotalWaste"] = pd.to_numeric(df["TotalWaste"], errors="coerce")
+        df.dropna(subset=["TotalWaste"], inplace=True)
 
-        return jsonify({"prediction": pred})
+        df["Category"] = df["TotalWaste"].apply(categorize)
+
+        X = df[["TotalWaste"]]
+        y = df["Category"]
+
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+
+        clf = DecisionTreeClassifier()
+        clf.fit(X_train, y_train)
+
+        joblib.dump(clf, MODEL_PATH)
+        model = clf
+
+        return True
+
+    except Exception as e:
+        print("Train Error:", e)
+        return False
+
+
+def load_model():
+    global model
+    if os.path.exists(MODEL_PATH):
+        model = joblib.load(MODEL_PATH)
+        return True
+    return False
+
+
+if not load_model():
+    train_model()
+
+# ---------------------------------------------------------
+# Routes
+# ---------------------------------------------------------
+@app.route("/")
+def home():
+    return jsonify({"message": "Backend running!", "model_loaded": model is not None})
+
+
+@app.route("/api/waste-data")
+def waste_data():
+    try:
+        df = pd.read_excel(DEFAULT_DATASET_PATH)
+
+        barangay_col = get_barangay_column(df)
+        waste_col = get_total_waste_column(df)
+
+        df = df[[barangay_col, waste_col]].copy()
+        df.rename(columns={barangay_col: "Barangay", waste_col: "TotalWaste"}, inplace=True)
+
+        df["TotalWaste"] = pd.to_numeric(df["TotalWaste"], errors="coerce")
+        df.dropna(subset=["TotalWaste"], inplace=True)
+
+        return jsonify([
+            {"barangay": row["Barangay"], "predicted": float(row["TotalWaste"])}
+            for _, row in df.iterrows()
+        ])
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Model info
-@app.route("/model/info", methods=["GET"])
-def model_info():
-    info = {
-        "model": "Decision Tree Classifier",
-        "features": X.columns.tolist(),
-        "accuracy_percent": accuracy
-    }
-    return jsonify(info)
 
-# ----------------------
-# Run Flask
-# ----------------------
+# ---------------------------------------------------------
+# ✅ Fix: Predictions endpoint used by Dashboard
+# ---------------------------------------------------------
+@app.route("/api/predictions")
+def predictions():
+    try:
+        df = pd.read_excel(DEFAULT_DATASET_PATH)
+
+        barangay_col = get_barangay_column(df)
+        waste_col = get_total_waste_column(df)
+
+        df = df[[barangay_col, waste_col]].copy()
+        df.rename(columns={barangay_col: "Barangay", waste_col: "TotalWaste"}, inplace=True)
+
+        df["TotalWaste"] = pd.to_numeric(df["TotalWaste"], errors="coerce")
+        df.dropna(subset=["TotalWaste"], inplace=True)
+
+        result = []
+        for _, row in df.iterrows():
+            waste = row["TotalWaste"]
+            level = categorize(waste)
+
+            # recommended actions
+            if level == "High":
+                action = "Deploy 2 trucks, priority collection"
+            elif level == "Medium":
+                action = "Standard collection schedule"
+            else:
+                action = "Reduced collection frequency"
+
+            result.append({
+                "id": str(_ + 1),
+                "barangay": row["Barangay"],
+                "predictionLevel": level,
+                "wasteVolume": float(waste),
+                "recommendedAction": action
+            })
+
+        return jsonify(result)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ---------------------------------------------------------
+# TOP 5 Barangays
+# ---------------------------------------------------------
+@app.route("/api/top5")
+def get_top5():
+    try:
+        df = pd.read_excel(DEFAULT_DATASET_PATH)
+
+        barangay_col = get_barangay_column(df)
+        waste_col = get_total_waste_column(df)
+
+        df = df[[barangay_col, waste_col]].copy()
+        df.rename(columns={barangay_col: "Barangay", waste_col: "TotalWaste"}, inplace=True)
+
+        df["TotalWaste"] = pd.to_numeric(df["TotalWaste"], errors="coerce")
+        df.dropna(subset=["TotalWaste"], inplace=True)
+
+        df_sorted = df.sort_values("TotalWaste", ascending=False).head(5)
+
+        return jsonify([
+            {"barangay": row["Barangay"], "wasteVolume": float(row["TotalWaste"])}
+            for _, row in df_sorted.iterrows()
+        ])
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ---------------------------------------------------------
+# Train API
+# ---------------------------------------------------------
+@app.route("/api/train", methods=["POST"])
+def train():
+    ok = train_model()
+    return jsonify({"success": ok})
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0", port=5000)

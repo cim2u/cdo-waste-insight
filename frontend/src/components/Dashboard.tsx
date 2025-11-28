@@ -1,6 +1,6 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card.tsx";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import { barangayPredictions, barangayWasteData } from "../lib/data.ts";
 import {
     Table,
     TableBody,
@@ -12,10 +12,43 @@ import {
 import { Badge } from "./ui/badge.tsx";
 
 export default function Dashboard() {
+
+    const [wasteData, setWasteData] = useState<any[]>([]);
+    const [predictions, setPredictions] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                const wasteRes = await fetch("http://localhost:5000/api/waste-data");
+                const predRes = await fetch("http://localhost:5000/api/predictions");
+
+                const wasteJson = await wasteRes.json();
+                const predJson = await predRes.json();
+
+                // Sort highest predicted waste first
+                const sortedWaste = wasteJson.sort((a: any, b: any) => b.predicted - a.predicted);
+
+                // Top 5 barangays
+                const topFive = sortedWaste.slice(0, 5);
+
+                setWasteData(topFive);
+                setPredictions(predJson);
+
+            } catch (err) {
+                console.error("Error fetching data:", err);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        fetchData();
+    }, []);
+
     const getBarColor = (value: number) => {
-        if (value >= 700) return '#ef4444'; // High - red
-        if (value >= 500) return '#eab308'; // Medium - yellow
-        return '#22c55e'; // Low - green
+        if (value >= 700) return '#ef4444';
+        if (value >= 500) return '#eab308';
+        return '#22c55e';
     };
 
     const getLevelBadgeVariant = (level: string) => {
@@ -29,6 +62,10 @@ export default function Dashboard() {
         }
     };
 
+    if (loading) {
+        return <p className="text-center text-lg">Loading dashboard...</p>;
+    }
+
     return (
         <div className="space-y-8">
             <div className="text-center">
@@ -36,14 +73,15 @@ export default function Dashboard() {
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">
-                {/* Today's Waste Prediction Chart */}
+
+                {/* TOP 5 BARANGAYS CHART */}
                 <Card className="shadow-sm">
                     <CardHeader>
-                        <CardTitle>Today's Waste Prediction</CardTitle>
+                        <CardTitle>Top 5 Barangays – Predicted Waste Today</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={barangayWasteData}>
+                            <BarChart data={wasteData}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                                 <XAxis
                                     dataKey="barangay"
@@ -52,9 +90,7 @@ export default function Dashboard() {
                                     textAnchor="end"
                                     height={80}
                                 />
-                                <YAxis
-                                    label={{ value: 'Waste (kg)', angle: -90, position: 'insideLeft' }}
-                                />
+                                <YAxis label={{ value: 'Waste (kg)', angle: -90, position: 'insideLeft' }} />
                                 <Tooltip
                                     formatter={(value) => [`${value} kg`, 'Predicted Waste']}
                                     contentStyle={{
@@ -64,8 +100,8 @@ export default function Dashboard() {
                                     }}
                                 />
                                 <Bar dataKey="predicted" radius={[8, 8, 0, 0]}>
-                                    {barangayWasteData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={getBarColor(entry.predicted)} />
+                                    {wasteData.map((entry, index) => (
+                                        <Cell key={index} fill={getBarColor(entry.predicted)} />
                                     ))}
                                 </Bar>
                             </BarChart>
@@ -73,7 +109,7 @@ export default function Dashboard() {
                     </CardContent>
                 </Card>
 
-                {/* Legend */}
+                {/* LEGEND */}
                 <Card className="shadow-sm">
                     <CardHeader>
                         <CardTitle>Prediction Levels</CardTitle>
@@ -104,7 +140,7 @@ export default function Dashboard() {
                 </Card>
             </div>
 
-            {/* Barangay Table */}
+            {/* PREDICTION TABLE */}
             <Card className="shadow-sm">
                 <CardHeader>
                     <CardTitle>Barangay Waste Predictions</CardTitle>
@@ -120,7 +156,7 @@ export default function Dashboard() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {barangayPredictions.map((prediction) => (
+                            {predictions.map((prediction) => (
                                 <TableRow key={prediction.id}>
                                     <TableCell>{prediction.barangay}</TableCell>
                                     <TableCell>
