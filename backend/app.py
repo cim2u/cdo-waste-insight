@@ -20,11 +20,13 @@ model = None
 def find_column(df, candidates):
     cols = list(df.columns)
 
+    # Exact match first
     for cand in candidates:
         for col in cols:
             if str(col).strip().lower() == cand.strip().lower():
                 return col
 
+    # Partial match
     for cand in candidates:
         for col in cols:
             if cand.strip().lower() in str(col).strip().lower():
@@ -39,6 +41,7 @@ def get_barangay_column(df):
     if col:
         return col
 
+    # fallback: first object‐type column
     for c in df.columns:
         if df[c].dtype == object:
             return c
@@ -59,8 +62,6 @@ def get_total_waste_column(df):
         return col
 
     numeric_cols = [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])]
-    numeric_cols = [c for c in numeric_cols if "total" not in str(c).lower()]
-
     if not numeric_cols:
         raise Exception("No numeric waste column found.")
 
@@ -78,13 +79,12 @@ def categorize(x):
         return "Low"
     elif x < 8000:
         return "Medium"
-        return "Medium"
     else:
         return "High"
 
 
 # ---------------------------------------------------------
-# Load + Clean Dataset (with total separated)
+# Load + Clean Dataset
 # ---------------------------------------------------------
 def load_cleaned_dataset():
     df = pd.read_excel(DEFAULT_DATASET_PATH)
@@ -98,7 +98,6 @@ def load_cleaned_dataset():
     df["TotalWaste"] = pd.to_numeric(df["TotalWaste"], errors="coerce")
     df.dropna(subset=["TotalWaste"], inplace=True)
 
-    # Separate TOTAL row if exists
     total_row = df[df["Barangay"].str.lower().str.contains("total")]
     df_no_total = df[~df["Barangay"].str.lower().str.contains("total")]
 
@@ -111,7 +110,7 @@ def load_cleaned_dataset():
 def train_model():
     global model
     try:
-        df, total_row = load_cleaned_dataset()
+        df, _ = load_cleaned_dataset()
 
         df["Category"] = df["TotalWaste"].apply(categorize)
 
@@ -127,8 +126,9 @@ def train_model():
         model = clf
 
         return True
+
     except Exception as e:
-        print("Train Error:", e)
+        print("Train error:", e)
         return False
 
 
@@ -149,10 +149,9 @@ if not load_model():
 # ---------------------------------------------------------
 @app.route("/")
 def home():
-    return jsonify({"message": "Backend running!"})
+    return jsonify({"message": "Backend is running!"})
 
 
-# ✔ Barangay waste (NO TOTAL)
 @app.route("/api/waste-data")
 def waste_data():
     try:
@@ -165,7 +164,6 @@ def waste_data():
         return jsonify({"error": str(e)}), 500
 
 
-# ✔ Prediction table (NO TOTAL)
 @app.route("/api/predictions")
 def predictions():
     try:
@@ -192,11 +190,11 @@ def predictions():
             })
 
         return jsonify(result)
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 
-# ✔ Top 5 (NO TOTAL)
 @app.route("/api/top5")
 def top5():
     try:
@@ -211,7 +209,6 @@ def top5():
         return jsonify({"error": str(e)}), 500
 
 
-# ⭐ NEW → SEPARATE TOTAL ENDPOINT
 @app.route("/api/total")
 def get_total():
     try:
@@ -221,18 +218,18 @@ def get_total():
             return jsonify({"totalWaste": None})
 
         total_value = float(total_row.iloc[0]["TotalWaste"])
-        category = categorize(total_value)
+        level = categorize(total_value)
 
-        if category == "High":
+        if level == "High":
             action = "Deploy 2 trucks, priority collection"
-        elif category == "Medium":
+        elif level == "Medium":
             action = "Standard collection schedule"
         else:
             action = "Reduced collection frequency"
 
         return jsonify({
             "totalWaste": total_value,
-            "category": category,
+            "category": level,
             "recommendedAction": action
         })
 
@@ -240,13 +237,11 @@ def get_total():
         return jsonify({"error": str(e)}), 500
 
 
-# TRAIN
 @app.route("/api/train", methods=["POST"])
 def train():
     ok = train_model()
     return jsonify({"success": ok})
 
 
-# RUN
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
