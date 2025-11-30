@@ -192,30 +192,7 @@ export default function GraphView() {
             {/* Charts Grid */}
             <div className="grid lg:grid-cols-2 gap-8">
 
-                {/* Top Barangays */}
-                <Card className="shadow-sm border border-gray-100 rounded-lg">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="flex items-center gap-2 text-lg font-semibold">
-                            <TrendingUp className="text-blue-600" />
-                            Top 10 Barangays by Waste
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={topBarangays}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="#f5f5f5" />
-                                <XAxis dataKey="barangay" angle={-40} textAnchor="end" height={70} tick={{ fontSize: 12 }} />
-                                <YAxis label={{ value: 'Waste (kg)', angle: -90, position: 'insideLeft', fontSize: 10 }} />
-                                <Tooltip content={<CustomTooltip />} />
-                                <Bar dataKey="predicted" radius={[4, 4, 0, 0]}>
-                                    {topBarangays.map((entry, index) => (
-                                        <Cell key={index} fill={getBarColor(entry.predictionLevel)} />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </CardContent>
-                </Card>
+
 
                 {/* Waste Distribution */}
                 <Card className="shadow-sm border border-gray-100 rounded-lg">
