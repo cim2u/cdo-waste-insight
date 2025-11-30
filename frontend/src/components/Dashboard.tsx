@@ -28,8 +28,13 @@ export default function Dashboard() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const wasteRes = await fetch("http://localhost:5000/api/waste-data");
-                const predRes = await fetch("http://localhost:5000/api/predictions");
+                // 🔥 UPDATED BACKEND URL
+                const wasteRes = await fetch(
+                    "https://cdo-waste-insight-7.onrender.com/api/waste-data"
+                );
+                const predRes = await fetch(
+                    "https://cdo-waste-insight-7.onrender.com/api/predictions"
+                );
 
                 const wasteJson = await wasteRes.json();
                 const predJson = await predRes.json();
@@ -67,10 +72,8 @@ export default function Dashboard() {
             {/* Header */}
             <div className="text-center">
                 <h1 className="text-6xl font-bold text-gray-900">
-
                     Waste Collection Predictions
                 </h1>
-
             </div>
 
             {/* Charts Grid */}
@@ -208,7 +211,6 @@ export default function Dashboard() {
                                         {prediction.barangay}
                                     </TableCell>
 
-                                    {/* ✔ Updated Badge */}
                                     <TableCell>
                                         <Badge
                                             predictionLevel={

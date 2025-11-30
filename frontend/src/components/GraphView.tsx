@@ -61,9 +61,10 @@ export default function GraphView() {
         const loadData = async () => {
             setLoading(true);
             try {
+                // 🔥 UPDATED BACKEND URL
                 const [wasteRes, predictionsRes] = await Promise.all([
-                    fetch("http://localhost:5000/api/waste-data"),
-                    fetch("http://localhost:5000/api/predictions")
+                    fetch("https://cdo-waste-insight-7.onrender.com/api/waste-data"),
+                    fetch("https://cdo-waste-insight-7.onrender.com/api/predictions")
                 ]);
 
                 const wasteJson = await wasteRes.json();
@@ -110,7 +111,6 @@ export default function GraphView() {
         };
     };
 
-    // Map prediction level to each barangay
     const topBarangays = [...wasteData]
         .map(item => {
             const prediction = predictions.find(p => p.barangay === item.barangay);
@@ -127,22 +127,6 @@ export default function GraphView() {
         { name: 'Medium', value: stats.category_counts.Medium, percentage: Math.round((stats.category_counts.Medium / stats.total_records) * 100) },
         { name: 'High', value: stats.category_counts.High, percentage: Math.round((stats.category_counts.High / stats.total_records) * 100) }
     ] : [];
-
-    const CustomTooltip = ({ active, payload, label }: any) => {
-        if (active && payload && payload.length) {
-            return (
-                <div className="bg-white p-3 rounded-md shadow-md border border-gray-100">
-                    <p className="font-semibold text-gray-900">{label}</p>
-                    {payload.map((entry: any, index: number) => (
-                        <p key={index} className="text-sm" style={{ color: entry.color }}>
-                            {entry.name}: {entry.value.toLocaleString()} kg
-                        </p>
-                    ))}
-                </div>
-            );
-        }
-        return null;
-    };
 
     const getBarColor = (level: 'Low' | 'Medium' | 'High') => {
         if (level === 'Low') return COLORS.low;
@@ -164,7 +148,6 @@ export default function GraphView() {
     return (
         <div className="space-y-8 px-4 md:px-8 lg:px-12">
 
-            {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h1 className="text-5xl sm:text-6xl md:text-[100px] font-bold text-gray-900">
                     Waste Analytics
@@ -176,7 +159,6 @@ export default function GraphView() {
                 </button>
             </div>
 
-            {/* Summary Cards */}
             <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-1">
                 {stats && (
                     <>
@@ -189,12 +171,8 @@ export default function GraphView() {
                 )}
             </div>
 
-            {/* Charts Grid */}
             <div className="grid lg:grid-cols-2 gap-8">
 
-
-
-                {/* Waste Distribution */}
                 <Card className="shadow-sm border border-gray-100 rounded-lg">
                     <CardHeader className="pb-2">
                         <CardTitle className="flex items-center gap-2 text-lg font-semibold">
@@ -244,14 +222,12 @@ const StatCard = ({
 }) => (
     <Card className="shadow-sm border border-gray-100 rounded-lg hover:shadow-md transition-shadow duration-200">
         <CardContent className="flex items-center py-4">
-            {/* Fixed width text container */}
             <div className="flex-1 min-w-[180px]">
                 <p className="text-sm font-medium text-gray-500">{title}</p>
                 <p className="text-xl font-bold text-gray-900 mt-1">{value}</p>
                 <p className="text-xs text-gray-400 mt-1">{subtitle}</p>
             </div>
 
-            {/* Icon container */}
             <div className="p-3 bg-gray-100 rounded-full flex items-center justify-center">
                 {icon}
             </div>
