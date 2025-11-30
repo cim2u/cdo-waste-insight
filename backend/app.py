@@ -1,35 +1,3 @@
-<<<<<<< HEAD
-# Use an official Python image (slim)
-FROM python:3.11-slim
-
-# Set working directory
-WORKDIR /app
-
-# Install system dependencies (optional, for some Python packages)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements first for caching
-COPY requirements.txt .
-
-# Upgrade pip and install Python dependencies
-RUN python -m pip install --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
-
-# Copy the rest of your app code
-COPY . .
-
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-ENV PORT=8080
-
-# Expose port for Cloud Run / Render
-EXPOSE 8080
-
-# Run the Flask app with Gunicorn (production server)
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers=2", "--threads=2", "app:app"]
-=======
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import pandas as pd
@@ -125,7 +93,7 @@ def train_model():
         df["Category"] = df["TotalWaste"].apply(categorize)
         X = df[["TotalWaste"]]
         y = df["Category"]
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
         clf = DecisionTreeClassifier()
         clf.fit(X_train, y_train)
         joblib.dump(clf, MODEL_PATH)
@@ -233,4 +201,3 @@ def train():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=True, host="0.0.0.0", port=port)
->>>>>>> ac8286cdb3981d46c51eebfa3269b89583f03bfd
