@@ -83,7 +83,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                                     className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-full text-lg font-extrabold tracking-wider shadow-2xl hover:shadow-3xl transition-all duration-300 relative overflow-hidden font-sans"
                                 >
                                     <span className="relative z-10 flex items-center gap-3 uppercase tracking-wider">
-                                        Explore Dashboard
+                                        Get Started
                                         <motion.span
                                             animate={{ x: [0, 8, 0] }}
                                             transition={{ duration: 1.5, repeat: Infinity }}

@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { Menu, LayoutDashboard, BarChart3, Info } from "lucide-react";
+import { Menu, LayoutDashboard, BarChart3, Info, TrendingUp } from "lucide-react";
 import { Button } from "./ui/button.tsx";
 
 export default function DashboardLayout() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
     const navItems = [
-        { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-        { to: "/graphs", icon: BarChart3, label: "Graph View" },
+        { to: "/prediction", icon: TrendingUp, label: "Prediction" },
         { to: "/about", icon: Info, label: "About" }
     ];
 

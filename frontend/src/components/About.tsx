@@ -11,7 +11,8 @@ export function About() {
       {/* Main Description */}
       <div className="bg-white rounded-lg shadow-md p-8 mb-6">
         <p className="text-gray-700 leading-relaxed">
-          The Waste Collection Prediction System is a data-driven platform designed to help manage waste collection operations in Cagayan de Oro City more efficiently. Using a <strong>Decision Tree Classifier</strong>, the system analyzes historical waste generation patterns to estimate daily waste levels across barangays. This allows city planners, students, or interested stakeholders to visualize waste trends, optimize collection schedules, and better allocate resources.
+          The Waste Collection Prediction System is a data-driven platform designed to help visualize and understand waste generation patterns across barangays in Cagayan de Oro City.
+          This system uses simple frontend-based logic to estimate expected waste levels and display helpful insights, schedules, and predictions without requiring a backend server.
         </p>
       </div>
 
@@ -26,19 +27,19 @@ export function About() {
         <ul className="space-y-2 text-gray-700 ml-4">
           <li className="flex items-start gap-2">
             <span className="text-blue-600 mt-1">•</span>
-            <span>Predict daily waste generation levels for each barangay with high accuracy</span>
+            <span>Allow users to estimate waste levels based on basic inputs</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-blue-600 mt-1">•</span>
-            <span>Optimize hypothetical truck deployment and collection routes to minimize operational inefficiencies</span>
+            <span>Provide recommended collection schedules depending on waste level</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-blue-600 mt-1">•</span>
-            <span>Demonstrate the use of machine learning for smart urban waste management</span>
+            <span>Visualize results easily through a simple and user-friendly interface</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-blue-600 mt-1">•</span>
-            <span>Provide data visualization and insights for understanding waste patterns</span>
+            <span>Demonstrate how prediction systems can assist in waste management planning</span>
           </li>
         </ul>
       </div>
@@ -54,19 +55,19 @@ export function About() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-            <span><strong>Machine Learning:</strong> Decision Tree Classifier for waste forecasting</span>
+            <span><strong>React:</strong> Main frontend framework for the UI</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-            <span><strong>React:</strong> Frontend framework for the user interface</span>
+            <span><strong>Tailwind CSS:</strong> For fast and modern UI styling</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-            <span><strong>Flask:</strong> Backend API and data handling</span>
+            <span><strong>Recharts:</strong> Chart visualizations used to display predictions</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-            <span><strong>Chart.js:</strong> Interactive charts for data visualization</span>
+            <span><strong>JavaScript Logic:</strong> Used to simulate prediction behavior</span>
           </div>
         </div>
       </div>
@@ -88,7 +89,7 @@ export function About() {
               <li>Yuan Ashlley A. Ladra</li>
               <li>Lerra Mae L. Jayme</li>
             </ul>
-            using publicly available data sources.
+            as part of an academic project.
           </p>
         </div>
 
@@ -101,7 +102,7 @@ export function About() {
             <h3 className="text-lg font-semibold">Data Sources</h3>
           </div>
           <p className="text-gray-700">
-            The system uses publicly available datasets from online sources, including historical waste collection data, population statistics, and other verified information, to generate predictions for waste management analysis.
+            The system uses sample and publicly accessible data as references for illustrating waste prediction behavior, serving purely as an educational demonstration.
           </p>
         </div>
       </div>
@@ -110,7 +111,8 @@ export function About() {
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mt-6">
         <h3 className="text-blue-900 mb-2 text-lg font-semibold">Why Waste Management Matters</h3>
         <p className="text-blue-800">
-          Effective waste management is essential for public health, environmental protection, and sustainable urban development. By applying machine learning and data analytics, this project demonstrates how cities like Cagayan de Oro can better understand and plan for waste collection needs, even with publicly sourced data.
+          Effective waste management is essential for public health, environmental protection, and sustainable development.
+          By using simple prediction approaches, this system demonstrates how data can guide better decision-making in waste collection planning.
         </p>
       </div>
     </div>

@@ -5,249 +5,140 @@ import joblib
 import os
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+import numpy as np
+from werkzeug.utils import secure_filename
 
+# -------------------------------------
+# CONFIGURATION
+# -------------------------------------
 MODEL_PATH = "waste_model.pkl"
 DEFAULT_DATASET_PATH = "dataset.xlsx"
+ALLOWED_EXTENSIONS = {"xlsx", "xls", "csv"}
 
 app = Flask(__name__)
 CORS(app)
 
-model = None
 
-# ---------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------
-def find_column(df, candidates):
-    cols = list(df.columns)
-    for cand in candidates:
-        for col in cols:
-            if str(col).strip().lower() == cand.strip().lower():
-                return col
-    for cand in candidates:
-        for col in cols:
-            if cand.strip().lower() in str(col).strip().lower():
-                return col
-    return None
+# -------------------------------------
+# CHECK FILE TYPE
+# -------------------------------------
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def get_barangay_column(df):
-    candidates = ["barangay", "barangay name", "brgy", "barangay_name"]
-    col = find_column(df, candidates)
-    if col:
-        return col
-    for c in df.columns:
-        if df[c].dtype == object:
-            return c
-    raise Exception("Barangay column not found in dataset.")
 
-def get_total_waste_column(df):
-    candidates = [
-        "SW generation (Population x SW segregation) kg/day",
-        "total waste volume per day (kg/day)",
-        "waste",
-        "waste volume",
-        "generation"
-    ]
-    col = find_column(df, candidates)
-    if col:
-        return col
-    numeric_cols = [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])]
-    if not numeric_cols:
-        raise Exception("No numeric waste column found.")
-    means = {c: df[c].mean() for c in numeric_cols}
-    return max(means, key=means.get)
-
-def categorize(x):
-    try:
-        x = float(x)
-    except:
-        return "Unknown"
-    if x < 3000:
-        return "Low"
-    elif x < 8000:
-        return "Medium"
-    else:
-        return "High"
-
-# ---------------------------------------------------------
-# Load + Clean Dataset
-# ---------------------------------------------------------
-def load_cleaned_dataset():
-    df = pd.read_excel(DEFAULT_DATASET_PATH)
-    barangay_col = get_barangay_column(df)
-    waste_col = get_total_waste_column(df)
-    df = df[[barangay_col, waste_col]].copy()
-    df.rename(columns={barangay_col: "Barangay", waste_col: "TotalWaste"}, inplace=True)
-    df["TotalWaste"] = pd.to_numeric(df["TotalWaste"], errors="coerce")
-    df.dropna(subset=["TotalWaste"], inplace=True)
-    total_row = df[df["Barangay"].str.lower().str.contains("total")]
-    df_no_total = df[~df["Barangay"].str.lower().str.contains("total")]
-    return df_no_total, total_row
-
-# ---------------------------------------------------------
-# Model Training
-# ---------------------------------------------------------
-def train_model():
-    global model
-    try:
-        df, _ = load_cleaned_dataset()
-        df["Category"] = df["TotalWaste"].apply(categorize)
-        X = df[["TotalWaste"]]
-        y = df["Category"]
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
-        clf = DecisionTreeClassifier()
-        clf.fit(X_train, y_train)
-        joblib.dump(clf, MODEL_PATH)
-        model = clf
-        return True
-    except Exception as e:
-        print("Train error:", e)
-        return False
-
-def load_model():
-    global model
-    if os.path.exists(MODEL_PATH):
-        model = joblib.load(MODEL_PATH)
-        return True
-    return False
-
-if not load_model():
-    train_model()
-
-# ---------------------------------------------------------
-# MODEL EVALUATION FUNCTION
-# ---------------------------------------------------------
-def evaluate_model():
-    try:
-        df, _ = load_cleaned_dataset()
-        df["Category"] = df["TotalWaste"].apply(categorize)
-
-        X = df[["TotalWaste"]]
-        y = df["Category"]
-
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.3, random_state=42
-        )
-
-        clf = model
-        if clf is None:
-            load_model()
-            clf = model
-
-        y_pred = clf.predict(X_test)
-
-        acc = accuracy_score(y_test, y_pred)
-        prec = precision_score(y_test, y_pred, average="weighted")
-        rec = recall_score(y_test, y_pred, average="weighted")
-        f1 = f1_score(y_test, y_pred, average="weighted")
-
-        cm = confusion_matrix(y_test, y_pred).tolist()
-
-        return {
-            "accuracy": acc,
-            "precision": prec,
-            "recall": rec,
-            "f1_score": f1,
-            "confusion_matrix": cm,
-            "labels": sorted(df["Category"].unique())
-        }
-
-    except Exception as e:
-        return {"error": str(e)}
-
-# ---------------------------------------------------------
-# Endpoints
-# ---------------------------------------------------------
+# -------------------------------------
+# HOME ROUTE
+# -------------------------------------
 @app.route("/")
 def home():
     return jsonify({"message": "Backend is running!"})
 
-@app.route("/api/waste-data")
-def waste_data():
+
+# -------------------------------------
+# TRAIN MODEL FROM DATASET
+# -------------------------------------
+def train_model_from_dataset(dataset_path):
+    df = pd.read_excel(dataset_path)
+
+    # Dataset must contain: waste, waste_category
+    X = df[["waste"]]        # input column
+    y = df["waste_category"] # target
+
+    # Train-test split 70/30
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.30, random_state=42
+    )
+
+    model = DecisionTreeClassifier()
+    model.fit(X_train, y_train)
+
+    joblib.dump(model, MODEL_PATH)
+    return model
+
+
+# -------------------------------------
+# LOAD MODEL
+# -------------------------------------
+def load_model():
+    if os.path.exists(MODEL_PATH):
+        return joblib.load(MODEL_PATH)
+    elif os.path.exists(DEFAULT_DATASET_PATH):
+        return train_model_from_dataset(DEFAULT_DATASET_PATH)
+    else:
+        return None
+
+
+model = load_model()
+
+
+# -------------------------------------
+# PREDICTION ROUTE
+# -------------------------------------
+@app.route("/predict", methods=["POST"])
+def predict():
+    global model
+
+    if model is None:
+        return jsonify({"error": "Model not available"}), 500
+
+    data = request.json
+    waste_value = float(data["totalWaste"])
+
+    input_data = np.array([[waste_value]])
+
+    prediction = model.predict(input_data)[0]
+
     try:
-        df, _ = load_cleaned_dataset()
-        return jsonify([
-            {"barangay": row["Barangay"], "predicted": float(row["TotalWaste"])}
-            for _, row in df.iterrows()
-        ])
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        confidence = float(model.predict_proba(input_data).max() * 100)
+    except:
+        confidence = None
 
-@app.route("/api/predictions")
-def predictions():
-    try:
-        df, _ = load_cleaned_dataset()
-        result = []
-        for i, row in df.iterrows():
-            waste = row["TotalWaste"]
-            level = categorize(waste)
-            if level == "High":
-                action = "Deploy 2 trucks, priority collection"
-            elif level == "Medium":
-                action = "Standard collection schedule"
-            else:
-                action = "Reduced collection frequency"
-            result.append({
-                "id": str(i + 1),
-                "barangay": row["Barangay"],
-                "predictionLevel": level,
-                "wasteVolume": float(waste),
-                "recommendedAction": action
-            })
-        return jsonify(result)
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    return jsonify({
+        "level": prediction,
+        "confidence": round(confidence, 2) if confidence else "N/A"
+    })
 
-@app.route("/api/top5")
-def top5():
-    try:
-        df, _ = load_cleaned_dataset()
-        df_sorted = df.sort_values("TotalWaste", ascending=False).head(5)
-        return jsonify([
-            {"barangay": row["Barangay"], "wasteVolume": float(row["TotalWaste"])}
-            for _, row in df_sorted.iterrows()
-        ])
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
 
-@app.route("/api/total")
-def get_total():
-    try:
-        _, total_row = load_cleaned_dataset()
-        if total_row.empty:
-            return jsonify({"totalWaste": None})
-        total_value = float(total_row.iloc[0]["TotalWaste"])
-        level = categorize(total_value)
-        if level == "High":
-            action = "Deploy 2 trucks, priority collection"
-        elif level == "Medium":
-            action = "Standard collection schedule"
-        else:
-            action = "Reduced collection frequency"
-        return jsonify({
-            "totalWaste": total_value,
-            "category": level,
-            "recommendedAction": action
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+# -------------------------------------
+# UPLOAD DATASET + RETRAIN
+# -------------------------------------
+@app.route("/upload", methods=["POST"])
+def upload_dataset():
+    global model
 
-@app.route("/api/train", methods=["POST"])
-def train():
-    ok = train_model()
-    return jsonify({"success": ok})
+    if "file" not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
 
-# ---------------------------------------------------------
-# NEW ENDPOINT: GET MODEL EVALUATION
-# ---------------------------------------------------------
-@app.route("/api/evaluate")
-def evaluate():
-    results = evaluate_model()
-    return jsonify(results)
+    file = request.files["file"]
 
-# ---------------------------------------------------------
-# Run App
-# ---------------------------------------------------------
+    if file.filename == "":
+        return jsonify({"error": "Empty filename"}), 400
+
+    if not allowed_file(file.filename):
+        return jsonify({"error": "Invalid file type"}), 400
+
+    filename = secure_filename(file.filename)
+    file.save(filename)
+
+    if filename.endswith(".csv"):
+        df = pd.read_csv(filename)
+    else:
+        df = pd.read_excel(filename)
+
+    # Dataset must contain: waste, waste_category
+    X = df[["waste"]]
+    y = df["waste_category"]
+
+    model = DecisionTreeClassifier()
+    model.fit(X, y)
+
+    joblib.dump(model, MODEL_PATH)
+
+    return jsonify({"message": "Model retrained successfully!"})
+
+
+# -------------------------------------
+# RUN SERVER
+# -------------------------------------
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(debug=True, host="0.0.0.0", port=port)
+    app.run(debug=True)
