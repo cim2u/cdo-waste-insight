@@ -22,7 +22,7 @@ export default function Prediction() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const response = await fetch("http://localhost:5000/predict", {
+        const response = await fetch("https://cdo-waste-insight-10.onrender.com", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ TotalWaste: Number(totalWaste) })
