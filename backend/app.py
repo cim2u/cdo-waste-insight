@@ -5,6 +5,7 @@ import joblib
 import os
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 
 MODEL_PATH = "waste_model.pkl"
 DEFAULT_DATASET_PATH = "dataset.xlsx"
@@ -114,6 +115,47 @@ if not load_model():
     train_model()
 
 # ---------------------------------------------------------
+# MODEL EVALUATION FUNCTION
+# ---------------------------------------------------------
+def evaluate_model():
+    try:
+        df, _ = load_cleaned_dataset()
+        df["Category"] = df["TotalWaste"].apply(categorize)
+
+        X = df[["TotalWaste"]]
+        y = df["Category"]
+
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.3, random_state=42
+        )
+
+        clf = model
+        if clf is None:
+            load_model()
+            clf = model
+
+        y_pred = clf.predict(X_test)
+
+        acc = accuracy_score(y_test, y_pred)
+        prec = precision_score(y_test, y_pred, average="weighted")
+        rec = recall_score(y_test, y_pred, average="weighted")
+        f1 = f1_score(y_test, y_pred, average="weighted")
+
+        cm = confusion_matrix(y_test, y_pred).tolist()
+
+        return {
+            "accuracy": acc,
+            "precision": prec,
+            "recall": rec,
+            "f1_score": f1,
+            "confusion_matrix": cm,
+            "labels": sorted(df["Category"].unique())
+        }
+
+    except Exception as e:
+        return {"error": str(e)}
+
+# ---------------------------------------------------------
 # Endpoints
 # ---------------------------------------------------------
 @app.route("/")
@@ -194,6 +236,14 @@ def get_total():
 def train():
     ok = train_model()
     return jsonify({"success": ok})
+
+# ---------------------------------------------------------
+# NEW ENDPOINT: GET MODEL EVALUATION
+# ---------------------------------------------------------
+@app.route("/api/evaluate")
+def evaluate():
+    results = evaluate_model()
+    return jsonify(results)
 
 # ---------------------------------------------------------
 # Run App
