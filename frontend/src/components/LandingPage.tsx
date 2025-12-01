@@ -10,7 +10,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
     return (
         <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 relative overflow-hidden">
 
-            {/* Background Sparkles */}
+            {/* Background Animations */}
             <motion.div
                 className="absolute top-0 left-1/4 w-72 h-72 bg-gradient-to-r from-emerald-200 via-green-100 to-teal-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"
                 animate={{ rotate: 360 }}
@@ -43,7 +43,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                     </div>
                     <div>
                         <div className="text-gray-900 font-semibold text-2xl">CDO Waste Insight</div>
-                        <div className="text-emerald-600 font-medium text-sm">Cagayan de Oro City</div>
+                        <div className="text-emerald-600 font-medium text-sm">System</div>
                     </div>
                 </motion.div>
 
@@ -61,13 +61,14 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                                 className="text-green-600 font-bold mt-[90px] text-center"
                                 style={{ fontSize: "80px", lineHeight: "123px" }}
                             >
-                                Smart Waste <br />
-                                Intelligence Platform
+                                Smart Waste Insight<br />
+
                             </h1>
 
                             {/* Description */}
                             <p className="text-gray-700 leading-relaxed text-center text-lg md:text-xl max-w-xl">
-                                Optimize waste collection in Cagayan de Oro City through predictive analytics, real-time monitoring, and actionable insights to create a cleaner and smarter environment.
+                                A data-driven platform that predicts barangay waste levels using machine learning.
+                                Optimize waste collection schedules, allocate trucks efficiently, and help build a cleaner and smarter Cagayan de Oro City.
                             </p>
 
                             {/* Get Started Button */}
@@ -82,7 +83,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                                     className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-full text-lg font-extrabold tracking-wider shadow-2xl hover:shadow-3xl transition-all duration-300 relative overflow-hidden font-sans"
                                 >
                                     <span className="relative z-10 flex items-center gap-3 uppercase tracking-wider">
-                                        GET STARTED
+                                        Explore Dashboard
                                         <motion.span
                                             animate={{ x: [0, 8, 0] }}
                                             transition={{ duration: 1.5, repeat: Infinity }}
@@ -96,25 +97,13 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                     </div>
                 </div>
 
-                {/* Feature Cards */}
-                <motion.div
-                    className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20"
-                >
-                    {/* Add feature cards here */}
-                </motion.div>
 
-                {/* Stats Section */}
-                <motion.div
-                    className="flex justify-center items-center gap-8 mt-20 flex-wrap"
-                >
-                    {/* Add stats here */}
-                </motion.div>
 
                 {/* Footer */}
                 <motion.div
                     className="text-center text-emerald-600 text-base mt-20 font-semibold"
                 >
-                    © 2025 CDO Waste Insight. All rights reserved.
+                    © 2025 CDO Waste Insight — Empowering Smart Waste Management in Cagayan de Oro City.
                 </motion.div>
             </div>
         </div>
