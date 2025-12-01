@@ -1,144 +1,54 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import pandas as pd
 import joblib
-import os
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.model_selection import train_test_split
 import numpy as np
-from werkzeug.utils import secure_filename
-
-# -------------------------------------
-# CONFIGURATION
-# -------------------------------------
-MODEL_PATH = "waste_model.pkl"
-DEFAULT_DATASET_PATH = "dataset.xlsx"
-ALLOWED_EXTENSIONS = {"xlsx", "xls", "csv"}
 
 app = Flask(__name__)
 CORS(app)
 
-
-# -------------------------------------
-# CHECK FILE TYPE
-# -------------------------------------
-def allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+# Load trained ML model
+model = joblib.load("waste_model.pkl")
 
 
-# -------------------------------------
-# HOME ROUTE
-# -------------------------------------
-@app.route("/")
+@app.route("/", methods=["GET"])
 def home():
-    return jsonify({"message": "Backend is running!"})
+    return jsonify({"message": "CDO WasteInsight ML API is running"})
 
 
-# -------------------------------------
-# TRAIN MODEL FROM DATASET
-# -------------------------------------
-def train_model_from_dataset(dataset_path):
-    df = pd.read_excel(dataset_path)
-
-    # Dataset must contain: waste, waste_category
-    X = df[["waste"]]        # input column
-    y = df["waste_category"] # target
-
-    # Train-test split 70/30
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.30, random_state=42
-    )
-
-    model = DecisionTreeClassifier()
-    model.fit(X_train, y_train)
-
-    joblib.dump(model, MODEL_PATH)
-    return model
-
-
-# -------------------------------------
-# LOAD MODEL
-# -------------------------------------
-def load_model():
-    if os.path.exists(MODEL_PATH):
-        return joblib.load(MODEL_PATH)
-    elif os.path.exists(DEFAULT_DATASET_PATH):
-        return train_model_from_dataset(DEFAULT_DATASET_PATH)
-    else:
-        return None
-
-
-model = load_model()
-
-
-# -------------------------------------
-# PREDICTION ROUTE
-# -------------------------------------
 @app.route("/predict", methods=["POST"])
 def predict():
-    global model
-
-    if model is None:
-        return jsonify({"error": "Model not available"}), 500
-
     data = request.json
-    waste_value = float(data["totalWaste"])
 
-    input_data = np.array([[waste_value]])
-
-    prediction = model.predict(input_data)[0]
+    # Validate input
+    if not data or "TotalWaste" not in data:
+        return jsonify({"error": "Missing 'TotalWaste' in request body"}), 400
 
     try:
-        confidence = float(model.predict_proba(input_data).max() * 100)
+        total_waste = float(data["TotalWaste"])
     except:
-        confidence = None
+        return jsonify({"error": "TotalWaste must be a number"}), 400
+
+    # ML prediction
+    X_input = np.array([[total_waste]])
+
+    predicted_label = model.predict(X_input)[0]
+
+    # Confidence score (if model supports predict_proba)
+    if hasattr(model, "predict_proba"):
+        confidence_score = round(float(model.predict_proba(X_input).max()) * 100, 2)
+    else:
+        confidence_score = None
+
+    # Derived values
+    weekly_waste = total_waste * 7
 
     return jsonify({
-        "level": prediction,
-        "confidence": round(confidence, 2) if confidence else "N/A"
+        "predicted_daily_kg": total_waste,
+        "predicted_weekly_kg": weekly_waste,
+        "level": predicted_label,
+        "confidence": confidence_score
     })
 
 
-# -------------------------------------
-# UPLOAD DATASET + RETRAIN
-# -------------------------------------
-@app.route("/upload", methods=["POST"])
-def upload_dataset():
-    global model
-
-    if "file" not in request.files:
-        return jsonify({"error": "No file uploaded"}), 400
-
-    file = request.files["file"]
-
-    if file.filename == "":
-        return jsonify({"error": "Empty filename"}), 400
-
-    if not allowed_file(file.filename):
-        return jsonify({"error": "Invalid file type"}), 400
-
-    filename = secure_filename(file.filename)
-    file.save(filename)
-
-    if filename.endswith(".csv"):
-        df = pd.read_csv(filename)
-    else:
-        df = pd.read_excel(filename)
-
-    # Dataset must contain: waste, waste_category
-    X = df[["waste"]]
-    y = df["waste_category"]
-
-    model = DecisionTreeClassifier()
-    model.fit(X, y)
-
-    joblib.dump(model, MODEL_PATH)
-
-    return jsonify({"message": "Model retrained successfully!"})
-
-
-# -------------------------------------
-# RUN SERVER
-# -------------------------------------
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000)
