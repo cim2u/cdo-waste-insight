@@ -61,7 +61,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                                 className="text-green-600 font-bold mt-[90px] text-center"
                                 style={{ fontSize: "80px", lineHeight: "123px" }}
                             >
-                                Smart Waste Insight<br />
+                                CdO Waste Insight<br />
 
                             </h1>
 
