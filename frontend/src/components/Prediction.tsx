@@ -1,246 +1,207 @@
-import { useState } from "react";
-import { Button } from "./ui/button.tsx";
-import { Card } from "./ui/card.tsx";
-import { Label } from "./ui/label.tsx";
-import { Input } from "./ui/input.tsx";
-import { AlertCircle, CheckCircle, TrendingUp } from "lucide-react";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from './ui/button.tsx';
+import { Input } from './ui/input.tsx';
+import { Label } from './ui/label.tsx';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card.tsx';
+import { Sparkles, MapPin, Scale } from 'lucide-react';
 
-interface PredictionResult {
-    level: "Low" | "Medium" | "High" | string;
-    predictedWeekly: number;
-    predictedDaily: number;
-    totalWaste: number;
-    barangay: string;
-}
+type WasteLevel = "Low" | "Medium" | "High";
 
-export default function Prediction() {
-    const [barangay, setBarangay] = useState("");
-    const [totalWaste, setTotalWaste] = useState("");
-    const [prediction, setPrediction] = useState<PredictionResult | null>(null);
-    const [isSubmitted, setIsSubmitted] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const [errorMessage, setErrorMessage] = useState("");
+export default function PredictionPage() {
+    const navigate = useNavigate();
+    const [barangayName, setBarangayName] = useState('');
+    const [dailyWaste, setDailyWaste] = useState('');
+       const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    // Recommendation logic for number of trucks
+    const getRecommendation = (level: WasteLevel) => {
+        switch (level) {
+            case "Low": return "1";
+            case "Medium": return "2";
+            case "High": return "3–4";
+            default: return "-";
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setErrorMessage("");
+
+        if (!barangayName || !dailyWaste) return;
+
         setLoading(true);
+        setError('');
 
         try {
-            const response = await fetch(
-                "https://cdo-waste-insight-10.onrender.com/predict",
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ TotalWaste: Number(totalWaste) })
-                }
-            );
+            const response = await fetch("https://cdo-waste-insight-10.onrender.com/predict", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    TotalWaste: Number(dailyWaste),
+                }),
+            });
 
             if (!response.ok) {
+                setError("Server error. Please check backend connection.");
                 setLoading(false);
-                setErrorMessage("Server error. Please check backend connection.");
                 return;
             }
 
             const result = await response.json();
 
             const cleanLevel = String(result.level).trim().toLowerCase();
-            let mappedLevel: "Low" | "Medium" | "High" = "Low";
+            let mappedLevel: WasteLevel = "Low";
 
             if (cleanLevel === "medium") mappedLevel = "Medium";
-            else if (cleanLevel === "high") mappedLevel = "High";
+            if (cleanLevel === "high") mappedLevel = "High";
 
-            setPrediction({
-                level: mappedLevel,
-                predictedWeekly: Number(result.predicted_weekly_kg),
+            const predictionData = {
+                barangayName,
+                dailyWaste: Number(dailyWaste),
                 predictedDaily: Number(result.predicted_daily_kg),
-                totalWaste: Number(totalWaste),
-                barangay: barangay
-            });
+                predictedWeekly: Number(result.predicted_weekly_kg),
+                level: mappedLevel,
+                recommendedTrucks: getRecommendation(mappedLevel),
+            };
 
-            setIsSubmitted(true);
+            sessionStorage.setItem("predictionData", JSON.stringify(predictionData));
+            navigate("/dashboard/prediction-result");
+
         } catch (err) {
-            setErrorMessage("Unable to connect to the server.");
+            setError("Unable to connect to the server.");
         }
 
         setLoading(false);
     };
 
-    const getLevelColor = (level: string) => {
-        switch (level) {
-            case "Low":
-                return "text-green-700 bg-green-100 border-green-300";
-            case "Medium":
-                return "text-yellow-700 bg-yellow-100 border-yellow-300";
-            case "High":
-                return "text-red-700 bg-red-100 border-red-300";
-            default:
-                return "text-gray-700 bg-gray-100 border-gray-300";
-        }
-    };
-
-    const getRecommendation = (level: string) => {
-        switch (level) {
-            case "Low":
-                return "Recommended waste collection: Once a week.";
-            case "Medium":
-                return "Moderate waste generation. Collection: Twice a week.";
-            case "High":
-                return "High waste level detected. Daily collection recommended.";
-            default:
-                return "No recommendation available.";
-        }
-    };
-
-    const resetForm = () => {
-        setBarangay("");
-        setTotalWaste("");
-        setPrediction(null);
-        setIsSubmitted(false);
-        setErrorMessage("");
-    };
-
     return (
-        <div className="flex justify-center py-10">
-            <div className="w-full max-w-xl space-y-8">
+        <div className="p-8 min-h-screen bg-gradient-to-br from-green-50 via-green-100 to-green-200">
 
-                {/* Title */}
-                <div className="text-center">
-                    <h2 className="text-slate-900 text-3xl font-bold">Waste Prediction</h2>
-                    <p className="text-slate-600 mt-2">
-                        Enter barangay and daily waste to get prediction results.
-                    </p>
+            <div className="max-w-2xl mx-auto">
+
+                {/* Title Section */}
+                <div className="mb-8">
+                    <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-green-600 to-green-700 rounded-xl flex items-center justify-center shadow-md">
+                            <Sparkles className="w-5 h-5 text-white" />
+                        </div>
+                        
+                    </div>
+                   
                 </div>
 
-                {/* ERROR MESSAGE */}
-                {errorMessage && (
-                    <div className="text-red-600 text-center font-semibold">
-                        {errorMessage}
-                    </div>
-                )}
+                {/* Card */}
+       <Card
+  className="relative"
+  style={{
+    borderRadius: "18px",
+    backgroundColor: "#ffffff",
+    overflow: "hidden",
+    boxShadow: "0px 4px 20px rgba(34, 197, 94, 0.25)", // soft green glow
+    border: "1.5px solid rgba(16, 185, 129, 0.35)",    // subtle green border
+  }}
+>
+  {/* Top Gradient Border */}
+  <div
+    style={{
+      height: "6px",
+      width: "100%",
+      background: "linear-gradient(to right, #34d399, #10b981, #059669)", 
+    }}
+  ></div>
 
-                {/* --- FORM --- */}
-                {!isSubmitted && (
-                    <Card className="p-8 rounded-2xl shadow-md bg-white border border-slate-200">
+
+
+
+
+
+                    {/* Accent Border */}
+                    <div className="h-2 bg-gradient-to-r from-green-700 via-green-600 to-green-500"></div>
+
+                    <CardHeader className="bg-white pt-9 pb-4 px-6">
+<CardTitle
+  className="font-extrabold text-green-600 mt-1 flex items-center gap-4 leading-none"
+  style={{ fontSize: "29px", fontFamily: "'Poppins', sans-serif" }}
+>
+  Generate Waste Prediction
+</CardTitle>
+
+
+
+                        <CardDescription className="text-black-600 mt-1">
+                            Enter barangay information to predict waste levels
+                        </CardDescription>
+                    </CardHeader>
+
+                    <CardContent className="px-6 pb-6 pt-2">
+
                         <form onSubmit={handleSubmit} className="space-y-6">
 
-                            <div>
-                                <Label className="text-slate-800 font-medium">Barangay *</Label>
+                            {/* Barangay Name */}
+                            <div className="space-y-2 mb-4">
+                                <Label htmlFor="barangay" className="flex items-center gap-2 text-green-800">
+                                    <MapPin className="w-4 h-4 text-green-600" />
+                                    Barangay Name *
+                                </Label>
                                 <Input
+                                    id="barangay"
                                     type="text"
                                     placeholder="Enter barangay name"
-                                    value={barangay}
-                                    onChange={(e) => setBarangay(e.target.value)}
-                                    className="h-12 rounded-xl mt-1"
+                                    value={barangayName}
+                                    onChange={(e) => setBarangayName(e.target.value)}
                                     required
+                                    className="border border-green-300/60 bg-green-50/20 rounded-lg focus:border-green-600 focus:ring-green-400/20"
                                 />
                             </div>
 
-                            <div>
-                                <Label className="text-slate-800 font-medium">
+                            {/* Daily Waste */}
+                            <div className="space-y-2 mb-4">
+                                <Label htmlFor="waste" className="flex items-center gap-2 text-green-800">
+                                    <Scale className="w-4 h-4 text-green-600" />
                                     Daily Waste (kg) *
                                 </Label>
                                 <Input
+                                    id="waste"
                                     type="number"
-                                    placeholder="Enter total waste kg/day"
-                                    value={totalWaste}
-                                    onChange={(e) => setTotalWaste(e.target.value)}
-                                    className="h-12 rounded-xl mt-1"
+                                    step="0.01"
+                                    min="0"
+                                    placeholder="Enter daily waste in kilograms"
+                                    value={dailyWaste}
+                                    onChange={(e) => setDailyWaste(e.target.value)}
                                     required
+                                    className="border border-green-300/60 bg-green-50/20 rounded-lg focus:border-green-600 focus:ring-green-400/20"
                                 />
                             </div>
 
+                            {/* Error */}
+                            {error && (
+                                <p className="text-red-600 text-sm text-center">{error}</p>
+                            )}
+
+                            {/* Submit Button */}
                             <Button
-                                type="submit"
-                                disabled={loading}
-                                className="mt-4 bg-green-600 hover:bg-green-700 h-12 w-full text-lg rounded-xl"
-                            >
-                                {loading ? (
-                                    "Generating..."
-                                ) : (
-                                    <>
-                                        <TrendingUp className="size-5 mr-2" />
-                                        Generate Prediction
-                                    </>
-                                )}
-                            </Button>
-                        </form>
-                    </Card>
-                )}
-
-                {/* --- RESULT --- */}
-                {isSubmitted && prediction && (
-                    <div className="space-y-8">
-
-                        <Card
-                            className={`p-10 rounded-2xl shadow-md border ${getLevelColor(prediction.level)}`}
-                        >
-                            <div className="text-center space-y-6">
-
-                                <div className="flex justify-center">
-                                    <div
-                                        className={`p-6 rounded-full ${getLevelColor(
-                                            prediction.level
-                                        )}`}
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full h-12 bg-green-600 hover:bg-green-700 transition shadow-md hover:shadow-lg rounded-lg"
+                                    style={{
+                                        fontFamily: "'Inter', sans-serif",
+                                        fontWeight: "600",
+                                        fontSize: "16px",
+                                        letterSpacing: "0.3px",
+                                        WebkitFontSmoothing: "antialiased"
+                                    }}
                                     >
-                                        <CheckCircle className="size-12" />
-                                    </div>
-                                </div>
+                                    {loading ? "Generating..." : "Generate Prediction"}
+                                    </Button>
 
-                                <h3 className="text-2xl font-semibold">Prediction Result</h3>
 
-                                <div
-                                    className={`inline-block px-6 py-3 rounded-full text-lg font-semibold ${getLevelColor(
-                                        prediction.level
-                                    )}`}
-                                >
-                                    {prediction.level} Waste Level
-                                </div>
 
-                                <div className="grid grid-cols-1 gap-4 pt-6">
-                                    <div className="p-4 bg-slate-50 rounded-xl shadow-sm">
-                                        <p className="text-sm text-slate-600">Barangay</p>
-                                        <p className="text-xl font-medium">{prediction.barangay}</p>
-                                    </div>
+                        </form>
 
-                                    <div className="p-4 bg-slate-50 rounded-xl shadow-sm">
-                                        <p className="text-sm text-slate-600">Daily Waste</p>
-                                        <p className="text-xl font-medium">
-                                            {prediction.totalWaste} kg/day
-                                        </p>
-                                    </div>
+                    </CardContent>
+                </Card>
 
-                                    <div className="p-4 bg-slate-50 rounded-xl shadow-sm">
-                                        <p className="text-sm text-slate-600">Predicted Weekly</p>
-                                        <p className="text-xl font-medium">
-                                            {prediction.predictedWeekly} kg/week
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </Card>
-
-                        <Card className="p-6 rounded-2xl bg-slate-50 border shadow-sm">
-                            <div className="flex gap-3">
-                                <AlertCircle className="size-6 mt-1 text-slate-500" />
-                                <div>
-                                    <h4 className="font-semibold text-lg">Recommended Action</h4>
-                                    <p className="text-slate-700">
-                                        {getRecommendation(prediction.level)}
-                                    </p>
-                                </div>
-                            </div>
-                        </Card>
-
-                        <Button
-                            variant="outline"
-                            onClick={resetForm}
-                            className="h-12 text-lg rounded-xl w-full"
-                        >
-                            Make Another Prediction
-                        </Button>
-                    </div>
-                )}
             </div>
         </div>
     );

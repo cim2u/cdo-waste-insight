@@ -1,17 +1,19 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+
 import { LandingPage } from "./components/LandingPage.tsx";
 import DashboardLayout from "./components/DashboardLayout.tsx";
 import { About } from "./components/About.tsx";
 import Prediction from "./components/Prediction.tsx";
+import PredictionResultPage from "./components/PredictionResultPage.tsx";
 
-import './styles/global.css';
+import "./styles/global.css";
 
-// Wrapper component to handle navigation for LandingPage
+// Wrapper to allow LandingPage to navigate
 function LandingPageWrapper() {
   const navigate = useNavigate();
 
   const handleGetStarted = () => {
-    navigate("/prediction");   // ✅ UPDATED: Send user to Prediction page
+    navigate("/dashboard/prediction");
   };
 
   return <LandingPage onGetStarted={handleGetStarted} />;
@@ -21,14 +23,30 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+
+        {/* Landing Page */}
         <Route path="/" element={<LandingPageWrapper />} />
 
-        <Route element={<DashboardLayout />}>
-          <Route path="/prediction" element={<Prediction />} />
-          <Route path="/about" element={<About />} />
+        {/* Dashboard Layout with nested pages */}
+        <Route path="/dashboard" element={<DashboardLayout />}>
+
+          {/* Default route */}
+          <Route index element={<Navigate to="/dashboard/prediction" replace />} />
+
+          {/* Prediction Page */}
+          <Route path="prediction" element={<Prediction />} />
+
+          {/* Prediction Result Page */}
+          <Route path="prediction-result" element={<PredictionResultPage />} />
+
+          {/* About Page */}
+          <Route path="about" element={<About />} />
+
         </Route>
 
+        {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
+
       </Routes>
     </BrowserRouter>
   );

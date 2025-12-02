@@ -57,13 +57,22 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                             className="flex flex-col items-center justify-center gap-6"
                         >
                             {/* Heading */}
-                            <h1
-                                className="text-green-600 font-bold mt-[90px] text-center"
-                                style={{ fontSize: "80px", lineHeight: "123px" }}
-                            >
-                                CdO Waste Insight<br />
+                            
+                                <h1
+                                style={{
+                                    fontFamily: "Poppins, sans-serif",
+                                    fontWeight: 800,
+                                    fontSize: "80px",
+                                    lineHeight: "1.1",
+                                    marginTop: "-100px",
+                                    textAlign: "center",
+                                    color: "#16A34A", // Tailwind green-600
+                                    letterSpacing: "-1px",
+                                }}
+                                >
+                                CdO Waste Insight
+                                </h1>
 
-                            </h1>
 
                             {/* Description */}
                             <p className="text-gray-700 leading-relaxed text-center text-lg md:text-xl max-w-xl">
