@@ -23,33 +23,31 @@ interface PredictionResult extends PredictionData {
   recommendation: string;
 }
 
-// Waste Computation Logic
+// Waste Computation Logic (Matches Backend Model)
 function calculatePrediction(data: PredictionData): PredictionResult {
   const weeklyWaste = data.dailyWaste * 7;
   let wasteLevel = "";
   let trucksNeeded = 0;
   let recommendation = "";
 
-  if (weeklyWaste < 500) {
-    wasteLevel = "Low Waste Level";
+  // Backend weekly thresholds
+  if (weeklyWaste < 3500) {
+    wasteLevel = "Low";
     trucksNeeded = 1;
     recommendation =
-      "One collection truck is sufficient for this barangay. Schedule pickups twice per week.";
-  } else if (weeklyWaste < 1500) {
-    wasteLevel = "Medium Waste Level";
+      "Low waste volume. One truck is sufficient. Schedule pickup 1–2 times per week.";
+  } 
+  else if (weeklyWaste < 4900) {
+    wasteLevel = "Medium";
     trucksNeeded = 2;
     recommendation =
-      "Two collection trucks are recommended. Schedule pickups three times per week.";
-  } else if (weeklyWaste < 3000) {
-    wasteLevel = "High Waste Level";
+      "Medium waste volume. Two trucks recommended. Schedule pickups 2–3 times per week.";
+  } 
+  else {
+    wasteLevel = "High";
     trucksNeeded = 3;
     recommendation =
-      "Three collection trucks are needed. Daily pickups are recommended to prevent overflow.";
-  } else {
-    wasteLevel = "Very High Waste Level";
-    trucksNeeded = 4;
-    recommendation =
-      "Four or more collection trucks are required. Consider daily pickups and additional waste segregation programs.";
+      "High waste volume. At least three trucks required. Daily pickup is recommended.";
   }
 
   return {
@@ -79,7 +77,7 @@ export default function PredictionResultPage() {
   if (!result) return null;
 
   const getLevelColor = (level: string) => {
-  if (level === "Low Waste Level") {
+  if (level === "Low") {
     return {
       backgroundColor: "#dcfce7",   // green-100
       color: "#166534",             // green-800
@@ -87,7 +85,7 @@ export default function PredictionResultPage() {
     };
   }
 
-  if (level === "Medium Waste Level") {
+  if (level === "Medium") {
     return {
       backgroundColor: "#fef9c3",   // yellow-100
       color: "#854d0e",             // yellow-800
@@ -95,7 +93,7 @@ export default function PredictionResultPage() {
     };
   }
 
-  if (level === "High Waste Level") {
+  if (level === "High") {
     return {
       backgroundColor: "#ffedd5",   // orange-100
       color: "#9a3412",             // orange-800
@@ -103,6 +101,7 @@ export default function PredictionResultPage() {
     };
   }
 
+  // fallback color (in case future levels appear)
   return {
     backgroundColor: "#fee2e2",     // red-100
     color: "#991b1b",               // red-800

@@ -8,27 +8,30 @@ def train_model():
     # Load the dataset
     df = pd.read_excel("dataset.xlsx")
 
-    # Rename the waste column
+    # Rename waste column
     df = df.rename(columns={
-        "SW generation (Population x SW segregation) kg/day": "TotalWaste"
+        "SW generation (Population x SW segregation) kg/day": "DailyWaste"
     })
 
     # Drop missing values
-    df = df.dropna(subset=["TotalWaste"])
+    df = df.dropna(subset=["DailyWaste"])
 
-    # Correct DAILY thresholds
-    def categorize(x):
-        if x < 500:
+    # Convert to WEEKLY
+    df["WeeklyWaste"] = df["DailyWaste"] * 7
+
+    # WEEKLY thresholds
+    def categorize_weekly(w):
+        if w < 3500:
             return "Low"
-        elif x < 700:
+        elif w < 4900:
             return "Medium"
         else:
             return "High"
 
-    df["Category"] = df["TotalWaste"].apply(categorize)
+    df["Category"] = df["WeeklyWaste"].apply(categorize_weekly)
 
-    # ML input & output
-    X = df[["TotalWaste"]]
+    # ML input uses WEEKLY waste
+    X = df[["WeeklyWaste"]]
     y = df["Category"]
 
     # Train/Test split
@@ -43,8 +46,7 @@ def train_model():
     # Save model
     joblib.dump(model, "waste_model.pkl")
 
-    print("Model trained and saved!")
-
+    print("Model trained using WEEKLY values!")
 
 if __name__ == "__main__":
     train_model()
