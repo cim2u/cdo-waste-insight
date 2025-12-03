@@ -34,7 +34,7 @@ export default function PredictionPage() {
         setError('');
 
         try {
-            const response = await fetch("https://cdo-waste-insight-10.onrender.com/predict", {
+            const response = await fetch("https://cdo-waste-insight-11.onrender.com/predict", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
