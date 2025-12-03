@@ -13,7 +13,7 @@ function LandingPageWrapper() {
   const navigate = useNavigate();
 
   const handleGetStarted = () => {
-    navigate("/dashboard/prediction");
+    navigate("/dashboard/classification");
   };
 
   return <LandingPage onGetStarted={handleGetStarted} />;
@@ -31,13 +31,13 @@ export default function App() {
         <Route path="/dashboard" element={<DashboardLayout />}>
 
           {/* Default route */}
-          <Route index element={<Navigate to="/dashboard/prediction" replace />} />
+          <Route index element={<Navigate to="/dashboard/classification" replace />} />
 
           {/* Prediction Page */}
-          <Route path="prediction" element={<Prediction />} />
+          <Route path="classification" element={<Prediction />} />
 
           {/* Prediction Result Page */}
-          <Route path="prediction-result" element={<PredictionResultPage />} />
+          <Route path="classification-result" element={<PredictionResultPage />} />
 
           {/* About Page */}
           <Route path="about" element={<About />} />

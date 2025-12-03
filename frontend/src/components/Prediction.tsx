@@ -66,7 +66,7 @@ export default function PredictionPage() {
             };
 
             sessionStorage.setItem("predictionData", JSON.stringify(predictionData));
-            navigate("/dashboard/prediction-result");
+            navigate("/dashboard/classification-result");
 
         } catch (err) {
             setError("Unable to connect to the server.");
