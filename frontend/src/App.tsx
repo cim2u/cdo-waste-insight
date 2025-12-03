@@ -28,7 +28,7 @@ export default function App() {
         <Route path="/" element={<LandingPageWrapper />} />
 
         {/* Dashboard Layout with nested pages */}
-        <Route path="/dashboard" element={<DashboardLayout />}>
+        <Route path="/dashboard/classification" element={<DashboardLayout />}>
 
           {/* Default route */}
           <Route index element={<Navigate to="/dashboard/classification" replace />} />
