@@ -34,7 +34,7 @@ export function PredictionForm() {
     return (
         <Card className="shadow-sm">
             <CardHeader>
-                <CardTitle>Waste Classification Predictor</CardTitle>
+                <CardTitle>Waste Classification </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
                 <div className="flex gap-4">

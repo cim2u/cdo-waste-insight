@@ -124,13 +124,13 @@ export default function PredictionPage() {
   className="font-extrabold text-green-600 mt-1 flex items-center gap-4 leading-none"
   style={{ fontSize: "29px", fontFamily: "'Poppins', sans-serif" }}
 >
-  Generate Waste Prediction
+  Generate Waste Classification
 </CardTitle>
 
 
 
                         <CardDescription className="text-black-600 mt-1">
-                            Enter barangay information to predict waste levels
+                          Enter barangay information to classify waste levels.
                         </CardDescription>
                     </CardHeader>
 
@@ -138,41 +138,62 @@ export default function PredictionPage() {
 
                         <form onSubmit={handleSubmit} className="space-y-6">
 
-                            {/* Barangay Name */}
-                            <div className="space-y-2 mb-4">
-                                <Label htmlFor="barangay" className="flex items-center gap-2 text-green-800">
-                                    <MapPin className="w-4 h-4 text-green-600" />
-                                    Barangay Name *
-                                </Label>
-                                <Input
-                                    id="barangay"
-                                    type="text"
-                                    placeholder="Enter barangay name"
-                                    value={barangayName}
-                                    onChange={(e) => setBarangayName(e.target.value)}
-                                    required
-                                    className="border border-green-300/60 bg-green-50/20 rounded-lg focus:border-green-600 focus:ring-green-400/20"
-                                />
-                            </div>
+                         {/* Barangay Name */}
+<div className="space-y-2 mb-4">
+    <Label htmlFor="barangay" className="flex items-center gap-2 text-green-800">
+        <MapPin className="w-4 h-4 text-green-600" />
+        Barangay Name{" "}
+        <span
+            style={{
+                color: barangayName ? "green" : "red",
+                fontWeight: "bold",
+                marginLeft: "2px"
+            }}
+        >
+            *
+        </span>
+    </Label>
 
-                            {/* Daily Waste */}
-                            <div className="space-y-2 mb-4">
-                                <Label htmlFor="waste" className="flex items-center gap-2 text-green-800">
-                                    <Scale className="w-4 h-4 text-green-600" />
-                                    Daily Waste (kg) *
-                                </Label>
-                                <Input
-                                    id="waste"
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    placeholder="Enter daily waste in kilograms"
-                                    value={dailyWaste}
-                                    onChange={(e) => setDailyWaste(e.target.value)}
-                                    required
-                                    className="border border-green-300/60 bg-green-50/20 rounded-lg focus:border-green-600 focus:ring-green-400/20"
-                                />
-                            </div>
+    <Input
+        id="barangay"
+        type="text"
+        placeholder="Enter barangay name"
+        value={barangayName}
+        onChange={(e) => setBarangayName(e.target.value)}
+        required
+        className="border border-green-300/60 bg-green-50/20 rounded-lg focus:border-green-600 focus:ring-green-400/20"
+    />
+</div>
+
+{/* Daily Waste */}
+<div className="space-y-2 mb-4">
+    <Label htmlFor="waste" className="flex items-center gap-2 text-green-800">
+        <Scale className="w-4 h-4 text-green-600" />
+        Daily Waste (kg){" "}
+        <span
+            style={{
+                color: dailyWaste ? "green" : "red",
+                fontWeight: "bold",
+                marginLeft: "2px"
+            }}
+        >
+            *
+        </span>
+    </Label>
+
+    <Input
+        id="waste"
+        type="number"
+        step="0.01"
+        min="0"
+        placeholder="Enter daily waste in kilograms"
+        value={dailyWaste}
+        onChange={(e) => setDailyWaste(e.target.value)}
+        required
+        className="border border-green-300/60 bg-green-50/20 rounded-lg focus:border-green-600 focus:ring-green-400/20"
+    />
+</div>
+
 
                             {/* Error */}
                             {error && (
@@ -192,7 +213,7 @@ export default function PredictionPage() {
                                         WebkitFontSmoothing: "antialiased"
                                     }}
                                     >
-                                    {loading ? "Generating..." : "Generate Prediction"}
+                                    {loading ? "Generating..." : "Classify Waste"}
                                     </Button>
 
 

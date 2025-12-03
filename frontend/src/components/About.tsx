@@ -11,13 +11,13 @@ export function About() {
       {/* Main Description */}
       <div className="bg-white rounded-lg shadow-md p-8 mb-6">
         <p className="text-gray-700 leading-relaxed">
-          The Waste Collection Prediction System is a machine-learning–powered
-          platform designed to assist in understanding and forecasting waste
+          The Waste Collection Classification System is a machine-learning–powered
+          platform designed to assist in understanding and classifying waste
           generation levels across barangays in Cagayan de Oro City.
           This system uses an ML model trained on waste generation data to provide
-          insights, predicted waste levels, and recommended collection schedules.
+          insights, classified waste levels, and recommended collection schedules.
           By combining a React-based frontend with a Python Flask backend, the
-          system delivers accurate predictions in a user-friendly interface.
+          system delivers accurate classifications in a user-friendly interface.
         </p>
       </div>
 
@@ -32,7 +32,7 @@ export function About() {
         <ul className="space-y-2 text-gray-700 ml-4">
           <li className="flex items-start gap-2">
             <span className="text-blue-600 mt-1">•</span>
-            <span>Predict daily and weekly waste generation using machine learning</span>
+            <span>Classify daily and weekly waste generation levels using machine learning</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-blue-600 mt-1">•</span>
@@ -40,7 +40,7 @@ export function About() {
           </li>
           <li className="flex items-start gap-2">
             <span className="text-blue-600 mt-1">•</span>
-            <span>Visualize predictions through a clean and user-friendly interface</span>
+            <span>Visualize classifications through a clean and user-friendly interface</span>
           </li>
           <li className="flex items-start gap-2">
             <span className="text-blue-600 mt-1">•</span>
@@ -68,7 +68,7 @@ export function About() {
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-            <span><strong>Flask (Python):</strong> Backend API handling ML predictions</span>
+            <span><strong>Flask (Python):</strong> Backend API handling ML classifications</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-green-600 rounded-full"></div>
@@ -108,7 +108,7 @@ export function About() {
           </div>
           <p className="text-gray-700">
             The model was trained using sample waste generation datasets and publicly available references.
-            These datasets were used solely for academic demonstration and to simulate real-world prediction behavior.
+            These datasets were used solely for academic demonstration and to simulate real-world classification behavior.
           </p>
         </div>
       </div>
@@ -118,7 +118,7 @@ export function About() {
         <h3 className="text-blue-900 mb-2 text-lg font-semibold">Why Waste Management Matters</h3>
         <p className="text-blue-800">
           Effective waste management is vital for public health, environmental sustainability,
-          and responsible urban planning. Through simple prediction methods and data analysis,
+          and responsible urban planning. Through simple classification methods and data analysis,
           this system highlights how technology can support smarter waste collection strategies
           for growing communities.
         </p>

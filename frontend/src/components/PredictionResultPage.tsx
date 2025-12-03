@@ -95,18 +95,14 @@ export default function PredictionResultPage() {
 
   if (level === "High") {
     return {
-      backgroundColor: "#ffedd5",   // orange-100
-      color: "#9a3412",             // orange-800
-      border: "2px solid #fdba74",  // orange-300
+      backgroundColor: "#fee2e2",     // red-100
+    color: "#991b1b",               // red-800
+    border: "2px solid #fca5a5",    // red-300
     };
   }
 
-  // fallback color (in case future levels appear)
-  return {
-    backgroundColor: "#fee2e2",     // red-100
-    color: "#991b1b",               // red-800
-    border: "2px solid #fca5a5",    // red-300
-  };
+ 
+  
 };
 
   return (
@@ -126,7 +122,7 @@ export default function PredictionResultPage() {
     textShadow: "0 1px 2px rgba(0,0,0,0.15)",
   }}
 >
-  Prediction Results
+  Classification Results
 </h1>
 
 
@@ -134,7 +130,7 @@ export default function PredictionResultPage() {
     className="text-gray-600 mt-2 text-lg"
     style={{ fontFamily: "'Inter', sans-serif" }}
   >
-    Your waste prediction has been generated successfully.
+    Your waste classification has been generated successfully.
   </p>
 </div>
 
@@ -184,7 +180,7 @@ export default function PredictionResultPage() {
   }}
 >
 
-  Prediction Generated Successfully
+  Classification Generated Successfully!
 </CardTitle>
 
 
@@ -240,7 +236,7 @@ export default function PredictionResultPage() {
             <div className="bg-green-50 rounded-2xl p-6 border border-green-200 shadow-sm">
               <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-green-600" />
-                Predicted Results
+                Classification Results
               </h3>
 
               <div className="grid grid-cols-2 gap-4">
@@ -286,7 +282,7 @@ export default function PredictionResultPage() {
               className="w-full border-green-400 text-green-700 hover:bg-green-50 hover:border-green-500"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Make Another Prediction
+                Make Another Classification
             </Button>
           </CardContent>
         </Card>

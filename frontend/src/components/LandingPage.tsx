@@ -57,8 +57,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                             className="flex flex-col items-center justify-center gap-6"
                         >
                             {/* Heading */}
-                            
-                                <h1
+                            <h1
                                 style={{
                                     fontFamily: "Poppins, sans-serif",
                                     fontWeight: 800,
@@ -69,14 +68,13 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                                     color: "#16A34A", // Tailwind green-600
                                     letterSpacing: "-1px",
                                 }}
-                                >
+                            >
                                 CdO Waste Insight
-                                </h1>
-
+                            </h1>
 
                             {/* Description */}
                             <p className="text-gray-700 leading-relaxed text-center text-lg md:text-xl max-w-xl">
-                                A data-driven platform that predicts barangay waste levels using machine learning.
+                                A data-driven platform that classifies barangay waste levels using machine learning.
                                 Optimize waste collection schedules, allocate trucks efficiently, and help build a cleaner and smarter Cagayan de Oro City.
                             </p>
 
@@ -105,8 +103,6 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                         </motion.div>
                     </div>
                 </div>
-
-
 
                 {/* Footer */}
                 <motion.div

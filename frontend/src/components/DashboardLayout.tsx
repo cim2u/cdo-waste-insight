@@ -8,7 +8,7 @@ export default function DashboardLayout() {
 
     // FIXED: Must include /dashboard/ prefix
     const navItems = [
-        { to: "/dashboard/prediction", icon: TrendingUp, label: "Prediction" },
+        { to: "/dashboard/prediction", icon: TrendingUp, label: "Classification" },
         { to: "/dashboard/about", icon: Info, label: "About" }
     ];
 
